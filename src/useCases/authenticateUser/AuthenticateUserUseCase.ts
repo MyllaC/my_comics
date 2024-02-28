@@ -1,6 +1,8 @@
 import { client } from "../../prisma/client"
 import { compare } from "bcryptjs"
 import { sign } from "jsonwebtoken"
+import { GenerateRefreshToken } from "../../provider/GenerateRefreshToken";
+import { GenerateTokenProvider } from "../../provider/GenerateTokenProvider";
 
 interface IRequest {
   email: string;
@@ -26,12 +28,19 @@ class AuthenticateUserUseCase {
         throw new Error("User or password incorrect")
       }
 
-      const token = sign({}, "625d6466-cb56-440d-ba20-80eb38f69742", {
-        subject: userAlreadyExists.id,
-        expiresIn: "20s"
+      const generateTokenProvider = new GenerateTokenProvider()
+      const token = await generateTokenProvider.execute(userAlreadyExists.id) 
+
+      await client.refreshToken.deleteMany({
+        where: {
+          userId: userAlreadyExists.id
+        }
       })
 
-      return { token }
+      const generateRefreshToken = new GenerateRefreshToken()
+      const refreshToken = await generateRefreshToken.execute(userAlreadyExists.id)
+
+      return { token , refreshToken}
     }
 }
 
