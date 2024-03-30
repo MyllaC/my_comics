@@ -14,14 +14,11 @@ export function ensureAuthenticated(request: Request, response: Response, next: 
     const [, token] = authToken.split(" ")
 
     try {
-
       verify(token, "625d6466-cb56-440d-ba20-80eb38f69742")
       return next()
-
     } catch (e) {
-      
       return response.status(401).json({
-        message: "Token invalid"
+        message: e
       })
     }
 }
